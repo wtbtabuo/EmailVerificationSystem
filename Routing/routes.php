@@ -14,7 +14,7 @@ use Response\Render\JSONRenderer;
 use Routing\Route;
 use Types\ValueType;
 use Models\User;
-use Scripts\phpmailer;
+use Scripts\MailSender;
 
 return [
     'login' => Route::create('login', function (): HTTPRenderer {
@@ -45,7 +45,7 @@ return [
                 $bodyText = $url; 
 
                 // メール送信
-                if (phpmailer($toEmail, $toName, $subject, $bodyText)) {
+                if (MailSender::sendCustomMail($toEmail, $toName, $subject, $bodyText)) {
                     echo 'メール送信成功';
                 } else {
                     echo 'メール送信失敗';
