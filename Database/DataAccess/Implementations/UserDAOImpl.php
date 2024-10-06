@@ -88,4 +88,26 @@ class UserDAOImpl implements UserDAO
     {
         return $this->getRawById($id)['password']??null;
     }
+
+    public function isVerifiedUser(string $email): bool {
+        $rawData = $this->getRawByEmail($email);
+        return $rawData["email_confirmed_at"] != NULL;
+    }
+
+    public function updateEmailConfirmedAt(): bool {
+        // データベース接続を取得
+        $mysqli = DatabaseManager::getMysqliConnection();
+    
+        // SQL文を修正。`email` フィールドを指定し、`WHERE` 句を正しく記述
+        $query = "UPDATE users SET email_confirmed_at = NOW() WHERE email = ?";
+    
+        // クエリの実行
+        $result = $mysqli->prepareAndExecute(
+            $query,
+            's',
+            [$email]
+        );
+    
+        return true;
+    }
 }

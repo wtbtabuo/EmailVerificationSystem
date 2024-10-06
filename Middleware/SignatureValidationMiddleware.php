@@ -7,6 +7,7 @@ use Response\FlashData;
 use Response\HTTPRenderer;
 use Response\Render\RedirectRenderer;
 use Routing\Route;
+use Database\DataAccess\DAOFactory;
 
 class SignatureValidationMiddleware implements Middleware
 {
@@ -21,12 +22,17 @@ class SignatureValidationMiddleware implements Middleware
 
         // URLに有効な署名があるかチェックします。
         if ($route->isSignedURLValid($_SERVER['HTTP_HOST'] . $currentPath)) {
+            error_log("passed until here");
             // 有効期限があるかどうかを確認し、有効期限がある場合は有効期限が切れていないことを確認します。
             if(isset($_GET['expiration']) && ValidationHelper::integer($_GET['expiration']) < time()){
                 FlashData::setFlashData('error', "The URL has expired.");
                 return new RedirectRenderer('random/part');
             }
-
+            
+            // userテーブルのemail_confirmed_atを更新
+            $userDao = DAOFactory::getUserDAO();
+            $userDao->updateEmailConfirmedAt();
+            
             // 署名が有効であれば、ミドルウェアチェインを進めます。
             return $next();
         } else {

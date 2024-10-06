@@ -14,6 +14,7 @@ use Response\Render\JSONRenderer;
 use Routing\Route;
 use Types\ValueType;
 use Models\User;
+use Scripts\phpmailer;
 
 return [
     'login' => Route::create('login', function (): HTTPRenderer {
@@ -22,17 +23,34 @@ return [
     'form/login' => Route::create('form/login', function (): HTTPRenderer {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
             $required_fields = [
                 'email' => ValueType::EMAIL,
                 'password' => ValueType::STRING,
             ];
-
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             Authenticate::authenticate($validatedData['email'], $validatedData['password']);
 
-            FlashData::setFlashData('success', 'Logged in successfully.');
+            $userDao = DAOFactory::getUserDAO();
+            if (!$userDao->isVerifiedUser($validatedData['email'])) {
+                $lasts = 900;
+
+                $validatedData['expication'] = time() + $lasts;
+                $url = Route::create('', function(){})->getSignedURL($validatedData);
+
+                // メール送信の設定
+                $toEmail = 'keita.tabuchi@firstloop-tech.com';
+                $toName = 'My User';
+                $subject = 'Response from cURL Request';
+                $bodyText = $url; 
+
+                // メール送信
+                if (phpmailer($toEmail, $toName, $subject, $bodyText)) {
+                    echo 'メール送信成功';
+                } else {
+                    echo 'メール送信失敗';
+                }
+            }
             return new RedirectRenderer('update/part');
         } catch (AuthenticationFailureException $e) {
             error_log($e->getMessage());
@@ -215,7 +233,7 @@ return [
         }
     })->setMiddleware(['auth']),
 
-    'test/share/files/jpg'=> Route::create('test/share/files/jpg', function(): HTTPRenderer{
+    'verify-email'=> Route::create('verify-email', function(): HTTPRenderer{
         // このURLは署名を必要とするため、URLが正しい署名を持つ場合にのみ、この最終ルートコードに到達します。
         $required_fields = [
             'user' => ValueType::STRING,
@@ -224,12 +242,11 @@ return [
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        return new MediaRenderer(sprintf("private/shared/%s/%s", $validatedData['user'],$validatedData['filename']), 'jpg');
+        new RedirectRenderer('random/part');
     })->setMiddleware(['signature']),
-    'test/share/files/jpg/generate-url'=> Route::create('test/share/files/jpg/generate-url', function(): HTTPRenderer{
+    'generate-url'=> Route::create('generate-url', function(): HTTPRenderer{
         $required_fields = [
-            'user' => ValueType::STRING,
-            'filename' => ValueType::STRING,
+            'email' => ValueType::STRING,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
@@ -238,6 +255,6 @@ return [
             $validatedData['expiration'] = time() + ValidationHelper::integer($_GET['lasts']);
         }
 
-        return new JSONRenderer(['url'=>Route::create('test/share/files/jpg', function(){})->getSignedURL($validatedData)]);
+        return new JSONRenderer(['url'=>Route::create('verify-email', function(){})->getSignedURL($validatedData)]);
     }),
 ];
