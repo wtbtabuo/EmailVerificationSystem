@@ -15,6 +15,8 @@ use Routing\Route;
 use Types\ValueType;
 use Models\User;
 use Scripts\MailSender;
+use Helpers\Settings;
+
 
 return [
     'login' => Route::create('login', function (): HTTPRenderer {
@@ -36,12 +38,12 @@ return [
                 $lasts = 900;
 
                 $validatedData['expication'] = time() + $lasts;
-                $url = Route::create('', function(){})->getSignedURL($validatedData);
+                $url = Route::create('verify-email', function(){})->getSignedURL($validatedData);
 
                 // メール送信の設定
-                $toEmail = 'keita.tabuchi@firstloop-tech.com';
-                $toName = 'My User';
-                $subject = 'Response from cURL Request';
+                $toEmail = $driver = Settings::env('TO_EMAIL');
+                $toName = 'No Reply';
+                $subject = 'Login Authentification';
                 $bodyText = $url; 
 
                 // メール送信
@@ -51,7 +53,7 @@ return [
                     echo 'メール送信失敗';
                 }
             }
-            return new RedirectRenderer('update/part');
+            return new RedirectRenderer('login');
         } catch (AuthenticationFailureException $e) {
             error_log($e->getMessage());
 

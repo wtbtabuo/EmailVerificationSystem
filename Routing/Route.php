@@ -60,7 +60,6 @@ class Route
     public function getSignedURL(array $queryParameters): string
     {
         $url = $this->getBaseURL();
-
         // 組み込み関数のhttp_build_queryを使用すると、 URLパラメータのクエリ文字列を配列から作成することができます。
         $queryString = http_build_query($queryParameters);
 
