@@ -14,6 +14,8 @@ class SignatureValidationMiddleware implements Middleware
     public function handle(callable $next): HTTPRenderer
     {
         $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+        $email = $_GET['email'];
+        error_log($email);
         $parsedUrl = parse_url($currentPath);
         $pathWithoutQuery = $parsedUrl['path'] ?? '';
 
@@ -22,7 +24,6 @@ class SignatureValidationMiddleware implements Middleware
 
         // URLに有効な署名があるかチェックします。
         if ($route->isSignedURLValid($_SERVER['HTTP_HOST'] . $currentPath)) {
-            error_log("passed until here");
             // 有効期限があるかどうかを確認し、有効期限がある場合は有効期限が切れていないことを確認します。
             if(isset($_GET['expiration']) && ValidationHelper::integer($_GET['expiration']) < time()){
                 FlashData::setFlashData('error', "The URL has expired.");
@@ -31,7 +32,7 @@ class SignatureValidationMiddleware implements Middleware
             
             // userテーブルのemail_confirmed_atを更新
             $userDao = DAOFactory::getUserDAO();
-            $userDao->updateEmailConfirmedAt();
+            $userDao->updateEmailConfirmedAt($email);
             
             // 署名が有効であれば、ミドルウェアチェインを進めます。
             return $next();

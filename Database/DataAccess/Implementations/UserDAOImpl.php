@@ -94,7 +94,7 @@ class UserDAOImpl implements UserDAO
         return $rawData["email_confirmed_at"] != NULL;
     }
 
-    public function updateEmailConfirmedAt(): bool {
+    public function updateEmailConfirmedAt(string $email): bool {
         // データベース接続を取得
         $mysqli = DatabaseManager::getMysqliConnection();
     

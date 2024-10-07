@@ -21,7 +21,7 @@ class MailSender
             $mail->Port       = 587;                              
 
             // 受信者
-            $mail->setFrom('keita753@gmail.com', 'SpaceApp');     
+            $mail->setFrom('keita753@gmail.com', '');     
             $mail->addAddress($toEmail, $toName);                 
 
             // メールの件名と本文を設定
