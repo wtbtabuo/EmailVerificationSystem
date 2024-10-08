@@ -48,9 +48,15 @@ return [
 
                 // メール送信
                 MailSender::sendCustomMail($toEmail, $toName, $subject, $bodyText);
+
+                FlashData::setFlashData('success', 'Check your email and verify it');
+                return new HTMLRenderer('page/login');
             }
-            FlashData::setFlashData('success', 'Check your email and verify it');
-            return new HTMLRenderer('page/login');
+            else {
+                FlashData::setFlashData('success', 'Logged in successfully.');
+                return new RedirectRenderer('login');
+            }
+
         } catch (AuthenticationFailureException $e) {
             error_log($e->getMessage());
 
