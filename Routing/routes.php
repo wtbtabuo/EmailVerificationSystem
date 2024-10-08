@@ -47,13 +47,10 @@ return [
                 $bodyText = $url; 
 
                 // メール送信
-                if (MailSender::sendCustomMail($toEmail, $toName, $subject, $bodyText)) {
-                    echo 'メール送信成功';
-                } else {
-                    echo 'メール送信失敗';
-                }
+                MailSender::sendCustomMail($toEmail, $toName, $subject, $bodyText);
             }
-            return new RedirectRenderer('login');
+            FlashData::setFlashData('success', 'Check your email and verify it');
+            return new HTMLRenderer('page/login');
         } catch (AuthenticationFailureException $e) {
             error_log($e->getMessage());
 
@@ -238,13 +235,13 @@ return [
     'verify-email'=> Route::create('verify-email', function(): HTTPRenderer{
         // このURLは署名を必要とするため、URLが正しい署名を持つ場合にのみ、この最終ルートコードに到達します。
         $required_fields = [
-            'user' => ValueType::STRING,
-            'filename' => ValueType::STRING, // 本番環境では、有効なファイルパスに対してバリデーションを行いますが、ファイルパスの単純な文字列チェックを行います。
+            'email' => ValueType::STRING,
+            'password' => ValueType::STRING, // 本番環境では、有効なファイルパスに対してバリデーションを行いますが、ファイルパスの単純な文字列チェックを行います。
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        new RedirectRenderer('random/part');
+        return new RedirectRenderer('login');
     })->setMiddleware(['signature']),
     'generate-url'=> Route::create('generate-url', function(): HTTPRenderer{
         $required_fields = [
